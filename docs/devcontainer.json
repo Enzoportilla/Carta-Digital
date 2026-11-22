@@ -1,0 +1,30 @@
+{
+  "name": "Carta en línea",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:1-22-bookworm",
+  "features": {
+    "ghcr.io/anthropics/devcontainer-features/claude-code:1": {},
+    "ghcr.io/devcontainers/features/git:1": {}
+  },
+  "forwardPorts": [5173, 3000],
+  "portsAttributes": {
+    "5173": { "label": "Frontend (Vite)" },
+    "3000": { "label": "API" }
+  },
+  "mounts": [
+    "source=claude-code-config-${devcontainerId},target=/home/node/.claude,type=volume"
+  ],
+  "remoteEnv": {
+    "CLAUDE_CONFIG_DIR": "/home/node/.claude"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "anthropic.claude-code",
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ]
+    }
+  },
+  "postCreateCommand": "npm install --no-audit --no-fund || true",
+  "remoteUser": "node"
+}
