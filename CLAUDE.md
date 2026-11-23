@@ -14,9 +14,9 @@ Página web / app que muestra una **carta o menú de comida** y permite **hacer 
 
 ## Cliente y carta de referencia
 Primer cliente: **Quesería Nonna Rosa** (quesos de cabra artesanales y productos de campo).
-- Datos de productos, precios y marca: `docs/referencia/carta.md` (fuente de verdad para los datos).
-- Referencia visual: `docs/referencia/paginas/pagina-01.jpg` … `pagina-13.jpg`.
-- PDF original: `docs/referencia/catalogo-nonna-rosa-2026-11-11.pdf`.
+- **Catálogo más reciente (23 nov 2026, 29 págs.):** `docs/referencia/catalogo-2026-7/carta.md` — fuente de verdad para productos, precios, promociones y disponibilidad; imágenes en `docs/referencia/catalogo-2026-7/paginas/`.
+- Catálogo anterior (11 nov): `docs/referencia/carta.md` (marca, contacto y estética siguen vigentes; precios reemplazados por el más reciente).
+- Referencia visual del catálogo anterior: `docs/referencia/paginas/`; PDFs originales en cada carpeta.
 Usa estos datos para la carta inicial (semilla) y toma la estética como inspiración, no como copia literal.
 
 ## Estructura
