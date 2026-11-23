@@ -38,10 +38,30 @@ export function cambiar(carrito, producto, { formatoId = '', sabor = '' }, delta
   return { ...resto, [clave]: { id: producto.id, formatoId, sabor, cantidad } }
 }
 
+// Filas de Supabase → fichas de la carta. Filas con igual categoría+nombre son una ficha con opciones (formato o sabor).
+// Se descartan inactivas o sin stock: RLS ya lo hace para el público, pero el admin con sesión ve todas.
+export function desdeFilas(filas) {
+  const grupos = new Map()
+  for (const f of filas) {
+    if (!f.activo || !(Number(f.stock) > 0)) continue
+    const id = `${f.categoria}|${f.nombre}`
+    if (!grupos.has(id)) grupos.set(id, { id, cat: f.categoria, nombre: f.nombre, venta: f.unidad_venta, foto: f.imagen, desc: f.descripcion, filas: [] })
+    grupos.get(id).filas.push(f)
+  }
+  return [...grupos.values()].map(({ filas, ...p }) => filas.length === 1
+    ? { ...p, formato: filas[0].formato, precio: filas[0].precio_clp }
+    : { ...p, formatos: filas.map((f) => ({ id: f.id, nombre: f.formato, precio: f.precio_clp })) })
+}
+
+// Una línea vale solo si su formato sigue a la venta; si no, se descarta en vez de cobrarla a otro precio.
+const lineaVigente = (producto, linea) => producto && (producto.formatos
+  ? producto.formatos.some((f) => f.id === linea.formatoId)
+  : !linea.formatoId)
+
 export function resumen(carrito, productosPorId) {
   const lineas = Object.entries(carrito)
     .map(([clave, linea]) => ({ clave, linea, producto: productosPorId[linea.id] }))
-    .filter((l) => l.producto)
+    .filter((l) => lineaVigente(l.producto, l.linea))
   const total = lineas.reduce((s, l) => s + totalLinea(l.producto, l.linea), 0)
   const hayKilos = lineas.some((l) => l.producto.venta === 'kg')
   const unidades = lineas.reduce((s, l) => s + (l.producto.venta === 'kg' ? 1 : l.linea.cantidad), 0)

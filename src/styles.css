@@ -630,3 +630,36 @@ a { color: var(--madera); text-decoration-thickness: 1.5px; text-underline-offse
   *, *::before, *::after { animation-duration: 1ms !important; transition-duration: 1ms !important; }
   html { scroll-behavior: auto; }
 }
+
+/* ---------- Estado de carga de la carta ---------- */
+.carta__estado { margin: 2rem 0; padding: 1rem; border-radius: .75rem; background: var(--hoja); text-align: center; }
+
+/* ---------- Panel #/admin (celular primero) ---------- */
+.admin { max-width: var(--ancho); margin: 0 auto; padding: 1rem var(--gutter) 4rem; }
+.admin h1 { font-size: 1.75rem; }
+.admin__login { display: grid; gap: 1rem; max-width: 24rem; margin: 3rem auto; }
+.admin__cabeza { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+.admin__cabeza h1 { flex: 1; }
+.admin__cat h2 { font-size: 1.25rem; margin: 1.5rem 0 .5rem; }
+.admin__cat ul { list-style: none; margin: 0; padding: 0; display: grid; gap: .6rem; }
+.admin__fila {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-areas: "nombre nombre nombre" "stock precio activo";
+  align-items: center;
+  gap: .5rem .75rem;
+  padding: .75rem;
+  border-radius: .75rem;
+  background: var(--hoja);
+  border: 2px solid var(--pasto-hondo);
+}
+.admin__fila--oculta { opacity: .7; border-style: dashed; }
+.admin__nombre { grid-area: nombre; margin: 0; font-weight: 700; display: flex; justify-content: space-between; gap: .5rem; flex-wrap: wrap; }
+.admin__nombre small { font-weight: 400; color: var(--nogal-suave); }
+.admin__fila .paso { grid-area: stock; animation: none; }
+.admin__fila .paso button { font-size: 1.5rem; font-weight: 700; }
+.admin__num { width: 3.5rem; min-height: 2.5rem; border: 0; background: none; text-align: center; font: inherit; font-weight: 700; font-variant-numeric: tabular-nums; }
+.admin__precio { grid-area: precio; display: flex; align-items: center; gap: .25rem; justify-self: start; }
+.admin__precio .admin__num { width: 5.5rem; border: 2px solid var(--pasto-hondo); border-radius: .5rem; background: #fff; }
+.admin__activo { grid-area: activo; display: flex; flex-direction: column; align-items: center; font-size: .875rem; }
+.admin__activo input { width: 1.5rem; height: 1.5rem; accent-color: var(--loma-3); }

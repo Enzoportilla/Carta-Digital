@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { CATEGORIAS, NEGOCIO, PRODUCTOS } from './data.js'
+import { CATEGORIAS, NEGOCIO } from './data.js'
+import { supabase } from './supabase.js'
 import { FOTOS } from './fotos.js'
 import {
-  cambiar, claveLinea, enlaceWhatsApp, kilos, mensajePedido, nombreLinea,
+  cambiar, claveLinea, desdeFilas, enlaceWhatsApp, kilos, mensajePedido, nombreLinea,
   precio, precioUnitario, resumen, totalLinea,
 } from './cart.js'
 
-const PRODUCTOS_POR_ID = Object.fromEntries(PRODUCTOS.map((p) => [p.id, p]))
 const CLAVE_STORAGE = 'nonna-rosa-pedido'
 const reducirMovimiento = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
@@ -98,7 +98,7 @@ function Paso({ producto, cantidad, onCambiar, etiqueta }) {
 
 function Producto({ producto, carrito, onCambiar }) {
   const [formatoId, setFormatoId] = useState(producto.formatos?.[0].id ?? '')
-  const [sabor, setSabor] = useState(producto.sabores?.[0] ?? '')
+  const sabor = ''
   const fotoRef = useRef(null)
   const linea = carrito[claveLinea(producto.id, formatoId, sabor)]
   const elegido = Object.values(carrito).some((l) => l.id === producto.id)
@@ -111,9 +111,9 @@ function Producto({ producto, carrito, onCambiar }) {
   }
 
   return (
-    <article className={`producto${producto.agotado ? ' producto--agotado' : ''}${elegido ? ' producto--elegido' : ''}`}>
+    <article className={`producto${elegido ? ' producto--elegido' : ''}`}>
       <div className="producto__foto" ref={fotoRef}>
-        <Foto id={producto.id} nombre={producto.nombre} />
+        <Foto id={producto.foto} nombre={producto.nombre} />
         {elegido && <Marca />}
       </div>
       <div className="producto__cuerpo">
@@ -122,16 +122,9 @@ function Producto({ producto, carrito, onCambiar }) {
         {producto.desc && <p className="producto__desc">{producto.desc}</p>}
 
         {producto.formatos && (
-          <div className="opciones" role="radiogroup" aria-label={`Formato de ${producto.nombre}`}>
+          <div className="opciones" role="radiogroup" aria-label={`Opciones de ${producto.nombre}`}>
             {producto.formatos.map((f) => (
               <button key={f.id} type="button" role="radio" aria-checked={f.id === formatoId} onClick={() => setFormatoId(f.id)}>{f.nombre}</button>
-            ))}
-          </div>
-        )}
-        {producto.sabores && (
-          <div className="opciones" role="radiogroup" aria-label={`Sabor de ${producto.nombre}`}>
-            {producto.sabores.map((s) => (
-              <button key={s} type="button" role="radio" aria-checked={s === sabor} onClick={() => setSabor(s)}>{s}</button>
             ))}
           </div>
         )}
@@ -141,9 +134,7 @@ function Producto({ producto, carrito, onCambiar }) {
             <span className="tablilla__precio">{precio(unitario)}</span>
             {producto.venta === 'kg' && <span className="tablilla__unidad">el kilo</span>}
           </p>
-          {producto.agotado ? (
-            <span className="agotado">Agotado por ahora</span>
-          ) : linea ? (
+          {linea ? (
             <Paso producto={producto} cantidad={linea.cantidad} onCambiar={cambiarAqui} etiqueta={etiqueta} />
           ) : (
             <button type="button" className="agregar" onClick={() => cambiarAqui(1)}>
@@ -218,7 +209,7 @@ function Pedido({ abierto, onCerrar, res, onCambiar, onVaciar }) {
             <ul className="lineas">
               {res.lineas.map(({ clave, linea, producto }) => (
                 <li key={clave}>
-                  <Foto id={producto.id} nombre="" className="foto foto--mini" />
+                  <Foto id={producto.foto} nombre="" className="foto foto--mini" />
                   <div>
                     <p className="lineas__nombre">{nombreLinea(producto, linea)}</p>
                     <p className="lineas__precio">{producto.venta === 'kg' ? 'aprox. ' : ''}{precio(totalLinea(producto, linea))}</p>
@@ -308,9 +299,22 @@ export default function App() {
   const [abierto, setAbierto] = useState(false)
   const [aviso, setAviso] = useState('')
   const [activa, setActiva] = useState(CATEGORIAS[0].id)
+  const [productos, setProductos] = useState(null) // null = cargando
+  const [error, setError] = useState(false)
   useEffect(() => guardar(CLAVE_STORAGE, carrito), [carrito])
 
-  const res = useMemo(() => resumen(carrito, PRODUCTOS_POR_ID), [carrito])
+  const cargar = async () => {
+    setError(false)
+    const { data, error } = await supabase.from('productos').select('*').order('orden')
+    if (error) { console.error(error); setError(true); return }
+    setProductos(desdeFilas(data))
+  }
+  useEffect(() => { cargar() }, [])
+
+  const porId = useMemo(() => Object.fromEntries((productos ?? []).map((p) => [p.id, p])), [productos])
+  const categorias = CATEGORIAS.filter((c) => productos?.some((p) => p.cat === c.id))
+  // Sin cargar aún, el canasto guardado no se toca ni se muestra (resumen vacío).
+  const res = useMemo(() => resumen(carrito, porId), [carrito, porId])
   const onCambiar = (producto, eleccion, delta, etiqueta) => {
     setCarrito((c) => cambiar(c, producto, eleccion, delta))
     setAviso(`${delta > 0 ? 'Agregaste' : 'Quitaste'} ${etiqueta}`)
@@ -323,7 +327,7 @@ export default function App() {
     )
     document.querySelectorAll('.categoria').forEach((s) => io.observe(s))
     return () => io.disconnect()
-  }, [])
+  }, [productos])
   useEffect(() => {
     // Centra la tablilla moviendo solo la barra: scrollIntoView también desplaza la página y en el celular corta el deslizamiento del dedo y los saltos a cada categoría.
     const barra = document.querySelector('.tablillas')
@@ -350,16 +354,26 @@ export default function App() {
       </section>
 
       <nav className="tablillas" aria-label="Categorías">
-        {CATEGORIAS.map((c) => (
-          <a key={c.id} href={`#${c.id}`} aria-current={activa === c.id ? 'true' : undefined}>{c.nombre}</a>
+        {categorias.map((c) => (
+          // Con HashRouter el # es la ruta: se desplaza a mano en vez de navegar.
+          <a key={c.id} href={`#${c.id}`} aria-current={activa === c.id ? 'true' : undefined}
+            onClick={(e) => { e.preventDefault(); document.getElementById(c.id)?.scrollIntoView({ behavior: reducirMovimiento() ? 'auto' : 'smooth' }) }}>{c.nombre}</a>
         ))}
       </nav>
 
       <main className="carta">
-        {CATEGORIAS.map((c) => (
+        {error && (
+          <p className="carta__estado" role="alert">
+            No pudimos cargar la carta. Revisa tu conexión a internet.{' '}
+            <button type="button" className="copiar" onClick={cargar}>Reintentar</button>
+          </p>
+        )}
+        {!error && !productos && <p className="carta__estado" role="status">Cargando la carta…</p>}
+        {productos?.length === 0 && <p className="carta__estado">Por ahora no hay productos disponibles. Escríbenos por WhatsApp.</p>}
+        {categorias.map((c) => (
           <section key={c.id} id={c.id} className="categoria" aria-labelledby={`${c.id}-t`}>
             <h2 id={`${c.id}-t`} className="categoria__cartel"><span>{c.nombre}</span></h2>
-            {PRODUCTOS.filter((p) => p.cat === c.id).map((p) => (
+            {productos.filter((p) => p.cat === c.id).map((p) => (
               <Producto key={p.id} producto={p} carrito={carrito} onCambiar={onCambiar} />
             ))}
           </section>
