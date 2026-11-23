@@ -2,13 +2,13 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { CATEGORIAS, NEGOCIO } from './data.js'
 import { supabase } from './supabase.js'
 import { FOTOS } from './fotos.js'
+import Tablillas, { reducirMovimiento } from './Tablillas.jsx'
 import {
-  cambiar, claveLinea, desdeFilas, enlaceWhatsApp, kilos, mensajePedido, nombreLinea,
+  cambiar, claveLinea, desdeFilas, enlaceWhatsApp, hoyChile, kilos, mensajePedido, nombreLinea,
   precio, precioUnitario, resumen, totalLinea,
 } from './cart.js'
 
 const CLAVE_STORAGE = 'nonna-rosa-pedido'
-const reducirMovimiento = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 function leer(clave, porDefecto) {
   try { return JSON.parse(localStorage.getItem(clave)) ?? porDefecto } catch { return porDefecto }
@@ -170,7 +170,10 @@ function Pradera() {
 function Pedido({ abierto, onCerrar, res, onCambiar, onVaciar }) {
   const dialogo = useRef(null)
   const formulario = useRef(null)
-  const [datos, setDatos] = useState(() => leer(`${CLAVE_STORAGE}-datos`, { entrega: 'retiro', nombre: '', apellido: '', telefono: '', direccion: '', comuna: '', comentario: '' }))
+  const [datos, setDatos] = useState(() => ({
+    ...leer(`${CLAVE_STORAGE}-datos`, { entrega: 'retiro', nombre: '', apellido: '', telefono: '', direccion: '', comuna: '', comentario: '' }),
+    fecha: '', // la fecha es de cada pedido: no se arrastra de una visita anterior
+  }))
   const [aviso, setAviso] = useState('')
   useEffect(() => guardar(`${CLAVE_STORAGE}-datos`, datos), [datos])
 
@@ -255,6 +258,15 @@ function Pedido({ abierto, onCerrar, res, onCambiar, onVaciar }) {
                 </label>
               ))}
             </fieldset>
+            {datos.entrega === 'retiro' && (
+              <>
+                <p className="nota">Retira en <strong>{NEGOCIO.retiro}</strong>.</p>
+                <label className="campo">
+                  <span>Fecha de retiro <small>(opcional)</small></span>
+                  <input type="date" min={hoyChile()} {...campo('fecha')} />
+                </label>
+              </>
+            )}
             {datos.entrega === 'delivery' && (
               <>
                 <p className="nota">El despacho se cobra según tu zona; Nonna Rosa te confirma el valor.</p>
@@ -298,7 +310,6 @@ export default function App() {
   const [carrito, setCarrito] = useState(() => leer(CLAVE_STORAGE, {}))
   const [abierto, setAbierto] = useState(false)
   const [aviso, setAviso] = useState('')
-  const [activa, setActiva] = useState(CATEGORIAS[0].id)
   const [productos, setProductos] = useState(null) // null = cargando
   const [error, setError] = useState(false)
   useEffect(() => guardar(CLAVE_STORAGE, carrito), [carrito])
@@ -320,21 +331,6 @@ export default function App() {
     setAviso(`${delta > 0 ? 'Agregaste' : 'Quitaste'} ${etiqueta}`)
   }
 
-  useEffect(() => {
-    const io = new IntersectionObserver(
-      (entradas) => entradas.forEach((e) => e.isIntersecting && setActiva(e.target.id)),
-      { rootMargin: '-80px 0px -70% 0px' }, // franja justo bajo la barra pegajosa
-    )
-    document.querySelectorAll('.categoria').forEach((s) => io.observe(s))
-    return () => io.disconnect()
-  }, [productos])
-  useEffect(() => {
-    // Centra la tablilla moviendo solo la barra: scrollIntoView también desplaza la página y en el celular corta el deslizamiento del dedo y los saltos a cada categoría.
-    const barra = document.querySelector('.tablillas')
-    const a = barra?.querySelector(`a[href="#${activa}"]`)
-    if (a) barra.scrollTo({ left: a.offsetLeft - (barra.clientWidth - a.offsetWidth) / 2, behavior: reducirMovimiento() ? 'auto' : 'smooth' })
-  }, [activa])
-
   return (
     <>
       <header className="portada">
@@ -353,13 +349,7 @@ export default function App() {
         <p className="bienvenida__como">Echa al canasto lo que quieras, deja tus datos y te armamos el mensaje para mandarlo por WhatsApp.</p>
       </section>
 
-      <nav className="tablillas" aria-label="Categorías">
-        {categorias.map((c) => (
-          // Con HashRouter el # es la ruta: se desplaza a mano en vez de navegar.
-          <a key={c.id} href={`#${c.id}`} aria-current={activa === c.id ? 'true' : undefined}
-            onClick={(e) => { e.preventDefault(); document.getElementById(c.id)?.scrollIntoView({ behavior: reducirMovimiento() ? 'auto' : 'smooth' }) }}>{c.nombre}</a>
-        ))}
-      </nav>
+      <Tablillas categorias={categorias} />
 
       <main className="carta">
         {error && (

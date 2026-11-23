@@ -5,6 +5,7 @@ export const NEGOCIO = {
   whatsapp: '56978900650',
   whatsappVisible: '+56 9 7890 0650',
   instagram: 'queserianonnarosa',
+  retiro: 'General Córdova 1249, Providencia',
   resolucion: 'Resolución sanitaria N°1695 del 18/07/2003',
 }
 
@@ -17,6 +18,8 @@ export const CATEGORIAS = [
   { id: 'palta', nombre: 'Palta' },
   { id: 'miel', nombre: 'Miel' },
   { id: 'mermeladas', nombre: 'Mermeladas' },
+  { id: 'despensa', nombre: 'Despensa' },
+  { id: 'licores', nombre: 'Licores' },
 ]
 
-// Los productos, precios y stock viven en Supabase (tabla productos); la semilla está en supabase/schema.sql.
+// Los productos, precios y stock viven en Supabase (tabla productos); la semilla está en supabase/schema.sql y supabase/catalogo-2026-7.sql.

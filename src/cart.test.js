@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { cambiar, resumen, mensajePedido, precio, enlaceWhatsApp, desdeFilas } from './cart.js'
+import { cambiar, hoyChile, resumen, mensajePedido, precio, enlaceWhatsApp, desdeFilas } from './cart.js'
 
 const fila = (id, categoria, nombre, formato, unidad_venta, precio_clp, stock = 5, activo = true) =>
   ({ id, categoria, nombre, formato, unidad_venta, precio_clp, stock, activo, imagen: id, descripcion: null })
@@ -63,4 +63,12 @@ test('mensaje de WhatsApp lleva detalle, total y entrega', () => {
   assert.match(msg, /Teléfono: \+56 9 1234 5678/)
   assert.doesNotMatch(msg, /Comentario/)
   assert.ok(enlaceWhatsApp('56978900650', msg).startsWith('https://wa.me/56978900650?text=Hola'))
+})
+
+test('mensaje de retiro lleva dirección y la fecha elegida, si la hay', () => {
+  const r = resumen(cambiar({}, porId[P.fresco], {}, 1), porId)
+  assert.match(mensajePedido(r, { entrega: 'retiro', fecha: '2026-11-30' }), /retiro en General Córdova 1249, Providencia, el lunes 30 de noviembre de 2026\./)
+  assert.match(mensajePedido(r, { entrega: 'retiro', fecha: '' }), /Providencia\. ¿Cuándo puedo pasar\?/)
+  assert.doesNotMatch(mensajePedido(r, { entrega: 'delivery', fecha: '2026-11-30', direccion: 'Los Aromos 12' }), /noviembre|Córdova/)
+  assert.match(hoyChile(), /^\d{4}-\d{2}-\d{2}$/)
 })

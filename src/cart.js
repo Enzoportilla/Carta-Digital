@@ -1,8 +1,13 @@
 // Lógica pura del carrito y del mensaje de WhatsApp (sin React, se prueba con node --test).
+import { NEGOCIO } from './data.js'
 
 const clp = new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })
 export const precio = (n) => clp.format(Math.round(n))
 export const kilos = (n) => `${String(n).replace('.', ',')} kg`
+
+// Fechas 'AAAA-MM-DD', como las entrega <input type="date">.
+export const hoyChile = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Santiago' }).format()
+const fechaLarga = (f) => new Intl.DateTimeFormat('es-CL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(new Date(f)).replace(',', '')
 
 export const PASO_KG = 0.5
 
@@ -68,7 +73,7 @@ export function resumen(carrito, productosPorId) {
   return { lineas, total, hayKilos, unidades }
 }
 
-export function mensajePedido({ lineas, total, hayKilos }, { entrega, nombre, apellido, telefono, direccion, comuna, comentario }) {
+export function mensajePedido({ lineas, total, hayKilos }, { entrega, fecha, nombre, apellido, telefono, direccion, comuna, comentario }) {
   const completo = [nombre, apellido].map((t) => t?.trim()).filter(Boolean).join(' ')
   const quien = completo ? `soy ${completo} y ` : ''
   const detalle = lineas.map(({ producto, linea }) => {
@@ -85,7 +90,7 @@ export function mensajePedido({ lineas, total, hayKilos }, { entrega, nombre, ap
     '',
     entrega === 'delivery'
       ? `Entrega: delivery a ${[direccion, comuna].filter(Boolean).join(', ')}. ¿Cuánto cuesta el despacho a mi zona?`
-      : 'Entrega: retiro en el local. ¿Cuándo puedo pasar?',
+      : `Entrega: retiro en ${NEGOCIO.retiro}${fecha ? `, el ${fechaLarga(fecha)}.` : '. ¿Cuándo puedo pasar?'}`,
     telefono?.trim() && `Teléfono: ${telefono.trim()}`,
     comentario && `Comentario: ${comentario}`,
   ]

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { supabase } from './supabase.js'
 import { CATEGORIAS } from './data.js'
 import { kilos } from './cart.js'
+import Tablillas from './Tablillas.jsx'
 
 function Login() {
   const [error, setError] = useState('')
@@ -99,7 +100,7 @@ function Panel() {
   }
 
   const nombreCat = Object.fromEntries(CATEGORIAS.map((c) => [c.id, c.nombre]))
-  const cats = [...new Set((filas ?? []).map((f) => f.categoria))]
+  const cats = [...new Set((filas ?? []).map((f) => f.categoria))].map((id) => ({ id, nombre: nombreCat[id] ?? id }))
 
   return (
     <>
@@ -110,10 +111,11 @@ function Panel() {
       </header>
       <p className="aviso" role="status">{aviso}</p>
       {!filas && !aviso && <p>Cargando…</p>}
+      {cats.length > 0 && <Tablillas categorias={cats} />}
       {cats.map((c) => (
-        <section key={c} className="admin__cat">
-          <h2>{nombreCat[c] ?? c}</h2>
-          <ul>{filas.filter((f) => f.categoria === c).map((f) => <Fila key={f.id} p={f} onGuardar={guardar} />)}</ul>
+        <section key={c.id} id={c.id} className="admin__cat">
+          <h2>{c.nombre}</h2>
+          <ul>{filas.filter((f) => f.categoria === c.id).map((f) => <Fila key={f.id} p={f} onGuardar={guardar} />)}</ul>
         </section>
       ))}
     </>

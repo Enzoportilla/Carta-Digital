@@ -613,8 +613,8 @@ a { color: var(--madera); text-decoration-thickness: 1.5px; text-underline-offse
   .producto { grid-template-columns: 9rem 1fr; gap: 1.5rem; }
   .campos-dos { grid-template-columns: 1.6fr 1fr; }
 }
-/* shortcut: el corte de 47rem calza con las 8 categorías de hoy; si se agregan o renombran, revisar o pasar a medir scrollWidth > clientWidth. */
-@media (min-width: 47rem) {
+/* shortcut: el corte de 59rem calza con las 10 categorías de hoy; si se agregan o renombran, revisar o pasar a medir scrollWidth > clientWidth. */
+@media (min-width: 59rem) {
   .tablillas::after { display: none; }
 }
 @media (min-width: 64rem) {
@@ -640,6 +640,10 @@ a { color: var(--madera); text-decoration-thickness: 1.5px; text-underline-offse
 .admin__login { display: grid; gap: 1rem; max-width: 24rem; margin: 3rem auto; }
 .admin__cabeza { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
 .admin__cabeza h1 { flex: 1; }
+.admin .tablillas { margin: 0 calc(-1 * var(--gutter)); justify-content: flex-start; }
+.admin .tablillas::after { display: block; }
+/* deja llegar arriba a la última categoría al saltar desde la barra */
+.admin__cat:last-child { min-height: calc(100dvh - 8rem); }
 .admin__cat h2 { font-size: 1.25rem; margin: 1.5rem 0 .5rem; }
 .admin__cat ul { list-style: none; margin: 0; padding: 0; display: grid; gap: .6rem; }
 .admin__fila {
