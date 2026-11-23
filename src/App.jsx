@@ -171,7 +171,7 @@ function Pedido({ abierto, onCerrar, res, onCambiar, onVaciar }) {
   const dialogo = useRef(null)
   const formulario = useRef(null)
   const [datos, setDatos] = useState(() => ({
-    ...leer(`${CLAVE_STORAGE}-datos`, { entrega: 'retiro', nombre: '', apellido: '', telefono: '', direccion: '', comuna: '', comentario: '' }),
+    ...leer(`${CLAVE_STORAGE}-datos`, { entrega: 'delivery', nombre: '', apellido: '', telefono: '', direccion: '', comuna: '', comentario: '' }),
     fecha: '', // la fecha es de cada pedido: no se arrastra de una visita anterior
   }))
   const [aviso, setAviso] = useState('')
@@ -251,7 +251,7 @@ function Pedido({ abierto, onCerrar, res, onCambiar, onVaciar }) {
 
             <fieldset className="entrega">
               <legend>¿Cómo lo recibes?</legend>
-              {[['retiro', 'Lo retiro'], ['delivery', 'Delivery']].map(([v, t]) => (
+              {[['delivery', 'Delivery'], ['retiro', 'Lo retiro']].map(([v, t]) => (
                 <label key={v} className="entrega__op">
                   <input type="radio" name="entrega" value={v} checked={datos.entrega === v} onChange={campo('entrega').onChange} />
                   <span>{t}</span>
